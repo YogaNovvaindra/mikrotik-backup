@@ -9,7 +9,7 @@ services:
       - MIKROTIK_USER=admin
       - MIKROTIK_BACKUP_ENCRYPT=password
       - MIKROTIK_MAX_BACKUPS=3
-      - TZ=Asia/Jakarta
+      - TZDATA=Asia/Jakarta
       - CRON_SCHEDULE=0 0 * * *
     volumes:
       - ./backups:/home/backupuser/backups

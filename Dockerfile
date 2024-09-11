@@ -41,7 +41,7 @@ MIKROTIK_USER=$MIKROTIK_USER \
 MIKROTIK_BACKUP_ENCRYPT=$MIKROTIK_BACKUP_ENCRYPT \
 MIKROTIK_SSH_PORT=$MIKROTIK_SSH_PORT \
 MIKROTIK_MAX_BACKUPS=$MIKROTIK_MAX_BACKUPS \
-TZ=$TZ \
+TZDATA=$TZ \
 /home/backupuser/mikrotik_backup.sh' > /home/backupuser/run_backup.sh \
 && chmod +x /home/backupuser/run_backup.sh
 
