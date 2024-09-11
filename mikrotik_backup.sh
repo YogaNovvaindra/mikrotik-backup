@@ -3,17 +3,16 @@
 # This script creates a backup file on the MikroTik router, pulls it to the local machine,
 # and manages the number of backup copies in a specific folder. It uses environment variables for configuration.
 
-# Read configuration from environment variables, with defaults
-ROUTER="${MIKROTIK_ROUTER:-10.1.1.127}"
-USER="${MIKROTIK_USER:-admin}"
-BACKUP_PASSWORD="${MIKROTIK_BACKUP_PASSWORD:-PASSWORD}"
+# Read configuration from environment variables
+ROUTER="${MIKROTIK_ROUTER}"
+USER="${MIKROTIK_USER}"
+BACKUP_PASSWORD="${MIKROTIK_BACKUP_ENCRYPT}"
 SSH_PORT="${MIKROTIK_SSH_PORT:-22}"
 MAX_BACKUPS="${MIKROTIK_MAX_BACKUPS:-3}"
-BACKUP_DIR="./backups"
+BACKUP_DIR="/home/backupuser/backups"
 
-# SSH and SFTP options to bypass host key checking and accept ssh-rsa key type
-SSH_OPTIONS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PubkeyAcceptedKeyTypes=+ssh-rsa"
-SFTP_OPTIONS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PubkeyAcceptedKeyTypes=+ssh-rsa"
+# SSH options
+SSH_OPTIONS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i /home/backupuser/.ssh/id_rsa"
 
 # Ensure backup directory exists
 mkdir -p "$BACKUP_DIR"
@@ -33,12 +32,10 @@ create_backup() {
 # Function to pull backup from the router
 pull_backup() {
     local backup_file="$ROUTER.backup"
-    local sftp_command="get $backup_file $BACKUP_DIR/"
+    local sftp_batch_commands="get $backup_file $BACKUP_DIR/
+exit"
     
-    sftp $SFTP_OPTIONS -P $SSH_PORT "$USER@$ROUTER" <<EOF
-$sftp_command
-exit
-EOF
+    echo "$sftp_batch_commands" | sftp $SSH_OPTIONS -P $SSH_PORT "$USER@$ROUTER"
 
     if [ $? -eq 0 ]; then
         echo "Backup file pulled successfully from $ROUTER"
