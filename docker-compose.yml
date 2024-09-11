@@ -1,0 +1,14 @@
+services:
+  mikrotik-backup:
+    image: mikrotik-backup:v1.0
+    container_name: mikrotik-backup
+    network_mode: bridge
+    restart: always
+    environment:
+      - MIKROTIK_ROUTER=10.1.1.127
+      - MIKROTIK_USER=admin
+      - MIKROTIK_BACKUP_PASSWORD=password
+      - CRON_SCHEDULE=0 0 * * *
+    volumes:
+      - ./backups:/home/backupuser/backups
+      - ./id_rsa:/home/backupuser/.ssh/id_rsa:ro
