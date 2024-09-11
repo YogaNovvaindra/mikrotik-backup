@@ -4,13 +4,13 @@
 # and manages the number of backup copies in a specific folder. It uses environment variables for configuration.
 
 # Read configuration from environment variables, with defaults
-ROUTER="${MIKROTIK_ROUTER:-10.1.1.127}"
-USER="${MIKROTIK_USER:-admin}"
-BACKUP_PASSWORD="${MIKROTIK_BACKUP_ENCRYPT:-PASSWORD}"
-SSH_PORT="${MIKROTIK_SSH_PORT:-22}"
-MAX_BACKUPS="${MIKROTIK_MAX_BACKUPS:-3}"
+ROUTER="${MIKROTIK_ROUTER}"
+USER="${MIKROTIK_USER}"
+BACKUP_PASSWORD="${MIKROTIK_BACKUP_ENCRYPT}"
+SSH_PORT="${MIKROTIK_SSH_PORT}"
+MAX_BACKUPS="${MIKROTIK_MAX_BACKUPS}"
 BACKUP_DIR="/home/backupuser/backups"
-TZ="${TZDATA:-Asia/Jakarta}"
+TZ="${TZDATA}"
 
 # SSH and SFTP options to bypass host key checking and accept ssh-rsa key type
 SSH_OPTIONS="-o StrictHostKeyChecking=no -o PubkeyAcceptedKeyTypes=+ssh-rsa -i /home/backupuser/.ssh/id_rsa"
