@@ -14,13 +14,10 @@ RUN apt-get update && apt-get install -y \
 RUN useradd -m backupuser
 WORKDIR /home/backupuser
 
-# Create .ssh directory
+# Create .ssh directory with correct permissions
 RUN mkdir -p /home/backupuser/.ssh && \
     chmod 700 /home/backupuser/.ssh && \
     chown backupuser:backupuser /home/backupuser/.ssh 
-
-# Set up the SSH client
-# RUN echo "PubkeyAcceptedKeyTypes +ssh-rsa" > /etc/ssh/ssh_config
 
 # Copy the backup script
 COPY mikrotik_backup.sh .
@@ -52,10 +49,9 @@ RUN echo "$CRON_SCHEDULE root /home/backupuser/run_backup.sh >> /var/log/cron.lo
 # Create the cron.log file
 RUN touch /var/log/cron.log
 
-# Create a startup script
+# Create a startup script with correct permissions for SSH key
 RUN echo '#!/bin/bash\n\
-if [ -f /run/secrets/ssh_key ]; then\n\
-  cp /run/secrets/ssh_key /home/backupuser/.ssh/id_rsa\n\
+if [ -f /home/backupuser/.ssh/id_rsa ]; then\n\
   chmod 600 /home/backupuser/.ssh/id_rsa\n\
   chown backupuser:backupuser /home/backupuser/.ssh/id_rsa\n\
 fi\n\
