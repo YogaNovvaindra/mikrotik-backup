@@ -49,11 +49,16 @@ RUN echo "$CRON_SCHEDULE root /home/backupuser/run_backup.sh >> /var/log/cron.lo
 # Create the cron.log file
 RUN touch /var/log/cron.log
 
-# Create a startup script with correct permissions for SSH key
+# Create a startup script with correct permissions for SSH key and known_hosts
 RUN echo '#!/bin/bash\n\
 if [ -f /home/backupuser/.ssh/id_rsa ]; then\n\
   chmod 600 /home/backupuser/.ssh/id_rsa\n\
   chown backupuser:backupuser /home/backupuser/.ssh/id_rsa\n\
+fi\n\
+if [ -n "$MIKROTIK_ROUTER" ]; then\n\
+  ssh-keyscan -H $MIKROTIK_ROUTER >> /home/backupuser/.ssh/known_hosts\n\
+  chown backupuser:backupuser /home/backupuser/.ssh/known_hosts\n\
+  chmod 644 /home/backupuser/.ssh/known_hosts\n\
 fi\n\
 echo "$CRON_SCHEDULE root /home/backupuser/run_backup.sh >> /var/log/cron.log 2>&1" > /etc/cron.d/backup-cron\n\
 cron\n\
