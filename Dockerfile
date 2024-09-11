@@ -33,26 +33,6 @@ ENV MIKROTIK_MAX_BACKUPS=3
 ENV TZ=Asia/Jakarta
 ENV CRON_SCHEDULE="0 0 * * *"
 
-# # Create a wrapper script to run the backup with environment variables
-# RUN echo '#!/bin/bash\n\
-# env - \
-# MIKROTIK_ROUTER=$MIKROTIK_ROUTER \
-# MIKROTIK_USER=$MIKROTIK_USER \
-# MIKROTIK_BACKUP_ENCRYPT=$MIKROTIK_BACKUP_ENCRYPT \
-# MIKROTIK_SSH_PORT=$MIKROTIK_SSH_PORT \
-# MIKROTIK_MAX_BACKUPS=$MIKROTIK_MAX_BACKUPS \
-# TZDATA=$TZ \
-# /home/backupuser/mikrotik_backup.sh' > /home/backupuser/run_backup.sh \
-# && chmod +x /home/backupuser/run_backup.sh
-
-
-# Set up cron job
-RUN echo "$CRON_SCHEDULE root /home/backupuser/mikrotik_backup.sh >> /var/log/cron.log 2>&1" > /etc/cron.d/backup-cron \
-    && chmod 0644 /etc/cron.d/backup-cron
-
-# Create the cron.log file
-RUN touch /var/log/cron.log
-
 # Create a startup script
 RUN echo '#!/bin/bash\n\
 if [ -f /home/backupuser/.ssh/id_rsa ]; then\n\
@@ -68,7 +48,8 @@ fi\n\
 if [ -n "$TZ" ]; then\n\
   ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone\n\
 fi\n\
-echo "$CRON_SCHEDULE root /home/backupuser/mikrotik_backup.sh >> /var/log/cron.log 2>&1" > /etc/cron.d/backup-cron\n\
+echo "$CRON_SCHEDULE root . /etc/environment && /home/backupuser/mikrotik_backup.sh >> /var/log/cron.log 2>&1" > /etc/cron.d/backup-cron\n\
+env > /etc/environment\n\
 cron\n\
 tail -f /var/log/cron.log' > /start.sh \
 && chmod +x /start.sh
