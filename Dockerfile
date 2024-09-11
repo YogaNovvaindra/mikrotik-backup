@@ -18,7 +18,7 @@ WORKDIR /home/backupuser
 RUN mkdir -p /home/backupuser/.ssh && \
     chmod 700 /home/backupuser/.ssh && \
     chown backupuser:backupuser /home/backupuser/.ssh \
-    echo "PubkeyAcceptedKeyTypes +ssh-rsa" > /home/backupuser/.ssh/config
+    echo "PubkeyAcceptedKeyTypes +ssh-rsa" > /etc/ssh/ssh_config
 
 # Copy the backup script
 COPY mikrotik_backup.sh .
