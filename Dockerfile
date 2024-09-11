@@ -1,6 +1,9 @@
 # Use Ubuntu 24.04 as the base image
 FROM ubuntu:24.04
 
+# Set the maintainer
+LABEL maintainer="yoga.november2000@gmail.com"
+
 # Avoid prompts from apt
 ENV DEBIAN_FRONTEND=noninteractive
 
