@@ -13,7 +13,7 @@ BACKUP_DIR="/home/backupuser/backups"
 TZ="${TZDATA:-Asia/Jakarta}"
 
 # SSH and SFTP options to bypass host key checking and accept ssh-rsa key type
-SSH_OPTIONS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PubkeyAcceptedKeyTypes=+ssh-rsa -i /home/backupuser/.ssh/id_rsa"
+SSH_OPTIONS="-o StrictHostKeyChecking=no -o PubkeyAcceptedKeyTypes=+ssh-rsa -i /home/backupuser/.ssh/id_rsa"
 
 # Ensure backup directory exists
 mkdir -p "$BACKUP_DIR"
