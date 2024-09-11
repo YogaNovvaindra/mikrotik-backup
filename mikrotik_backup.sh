@@ -3,14 +3,18 @@
 # This script creates a backup file on the MikroTik router, pulls it to the local machine,
 # and manages the number of backup copies in a specific folder. It uses environment variables for configuration.
 
+# Debugging: Print all environment variables
+echo "Environment variables:"
+env
+
 # Read configuration from environment variables, with defaults
-ROUTER="${MIKROTIK_ROUTER}"
-USER="${MIKROTIK_USER}"
-BACKUP_PASSWORD="${MIKROTIK_BACKUP_ENCRYPT}"
-SSH_PORT="${MIKROTIK_SSH_PORT}"
-MAX_BACKUPS="${MIKROTIK_MAX_BACKUPS}"
+ROUTER="${MIKROTIK_ROUTER:-}"
+USER="${MIKROTIK_USER:-}"
+BACKUP_PASSWORD="${MIKROTIK_BACKUP_ENCRYPT:-}"
+SSH_PORT="${MIKROTIK_SSH_PORT:-22}"
+MAX_BACKUPS="${MIKROTIK_MAX_BACKUPS:-3}"
 BACKUP_DIR="/home/backupuser/backups"
-TZ="${TZDATA}"
+TZ="${TZDATA:-Asia/Jakarta}"
 
 # SSH and SFTP options to bypass host key checking and accept ssh-rsa key type
 SSH_OPTIONS="-o StrictHostKeyChecking=no -o PubkeyAcceptedKeyTypes=+ssh-rsa -i /home/backupuser/.ssh/id_rsa"
