@@ -11,9 +11,9 @@ SSH_PORT="${MIKROTIK_SSH_PORT:-22}"
 MAX_BACKUPS="${MIKROTIK_MAX_BACKUPS:-3}"
 BACKUP_DIR="./backups"
 
-# SSH and SFTP options to bypass host key checking
-SSH_OPTIONS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-SFTP_OPTIONS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+# SSH and SFTP options to bypass host key checking and accept ssh-rsa key type
+SSH_OPTIONS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PubkeyAcceptedKeyTypes=+ssh-rsa"
+SFTP_OPTIONS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PubkeyAcceptedKeyTypes=+ssh-rsa"
 
 # Ensure backup directory exists
 mkdir -p "$BACKUP_DIR"

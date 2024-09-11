@@ -20,7 +20,7 @@ RUN mkdir -p /home/backupuser/.ssh && \
     chown backupuser:backupuser /home/backupuser/.ssh 
 
 # Set up the SSH client
-RUN echo "PubkeyAcceptedKeyTypes +ssh-rsa" > /etc/ssh/ssh_config
+# RUN echo "PubkeyAcceptedKeyTypes +ssh-rsa" > /etc/ssh/ssh_config
 
 # Copy the backup script
 COPY mikrotik_backup.sh .
