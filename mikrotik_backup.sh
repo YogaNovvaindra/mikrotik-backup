@@ -24,7 +24,7 @@ log() {
 mkdir -p "$BACKUP_DIR"
 
 log "Starting backup process for $ROUTER"
-log "Debug: ROUTER=$ROUTER, USER=$USER, SSH_PORT=$SSH_PORT, MAX_BACKUPS=$MAX_BACKUPS, TZ=$TZ"
+# log "Debug: ROUTER=$ROUTER, USER=$USER, SSH_PORT=$SSH_PORT, MAX_BACKUPS=$MAX_BACKUPS, TZ=$TZ"
 
 # Function to create backup on the router
 create_backup() {
