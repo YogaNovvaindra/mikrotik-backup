@@ -33,25 +33,38 @@ ENV MIKROTIK_MAX_BACKUPS=3
 ENV TZ=Asia/Jakarta
 ENV CRON_SCHEDULE="0 0 * * *"
 
+# Create log files and set permissions
+RUN touch /var/log/cron.log /var/log/mikrotik_backup.log && \
+    chmod 0644 /var/log/cron.log /var/log/mikrotik_backup.log && \
+    chown backupuser:backupuser /var/log/cron.log /var/log/mikrotik_backup.log
+
 # Create a startup script
 RUN echo '#!/bin/bash\n\
+echo "Starting container..."\n\
 if [ -f /home/backupuser/.ssh/id_rsa ]; then\n\
   chmod 600 /home/backupuser/.ssh/id_rsa\n\
   chown backupuser:backupuser /home/backupuser/.ssh/id_rsa\n\
+  echo "SSH key permissions set"\n\
 fi\n\
 if [ -n "$MIKROTIK_ROUTER" ]; then\n\
   ssh-keyscan -H $MIKROTIK_ROUTER >> /home/backupuser/.ssh/known_hosts\n\
   chown backupuser:backupuser /home/backupuser/.ssh/known_hosts\n\
   chmod 644 /home/backupuser/.ssh/known_hosts\n\
+  echo "Added $MIKROTIK_ROUTER to known_hosts"\n\
 fi\n\
 # Set the timezone\n\
 if [ -n "$TZ" ]; then\n\
   ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone\n\
+  echo "Timezone set to $TZ"\n\
 fi\n\
-echo "$CRON_SCHEDULE root . /etc/environment && /home/backupuser/mikrotik_backup.sh >> /var/log/cron.log 2>&1" > /etc/cron.d/backup-cron\n\
+echo "$CRON_SCHEDULE root . /etc/environment && /home/backupuser/mikrotik_backup.sh >> /var/log/mikrotik_backup.log 2>&1" > /etc/cron.d/backup-cron\n\
+chmod 0644 /etc/cron.d/backup-cron\n\
 env > /etc/environment\n\
+echo "Cron job set up with schedule: $CRON_SCHEDULE"\n\
+echo "Starting cron service..."\n\
 cron\n\
-tail -f /var/log/cron.log' > /start.sh \
+echo "Cron service started. Tailing logs..."\n\
+tail -f /var/log/cron.log /var/log/mikrotik_backup.log' > /start.sh \
 && chmod +x /start.sh
 
 # Run the startup script

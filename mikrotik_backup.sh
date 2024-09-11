@@ -15,17 +15,26 @@ TZ="${TZDATA:-Asia/Jakarta}"
 # SSH and SFTP options to bypass host key checking and accept ssh-rsa key type
 SSH_OPTIONS="-o StrictHostKeyChecking=no -o PubkeyAcceptedKeyTypes=+ssh-rsa -i /home/backupuser/.ssh/id_rsa"
 
+# Logging function
+log() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1"
+}
+
 # Ensure backup directory exists
 mkdir -p "$BACKUP_DIR"
+
+log "Starting backup process for $ROUTER"
+log "Debug: ROUTER=$ROUTER, USER=$USER, SSH_PORT=$SSH_PORT, MAX_BACKUPS=$MAX_BACKUPS, TZ=$TZ"
 
 # Function to create backup on the router
 create_backup() {
     local router_command="/system backup save name=$ROUTER encryption=aes-sha256 password=$BACKUP_PASSWORD"
+    log "Creating backup on router..."
     ssh $SSH_OPTIONS -p $SSH_PORT "$USER@$ROUTER" "$router_command"
     if [ $? -eq 0 ]; then
-        echo "Backup created successfully on $ROUTER"
+        log "Backup created successfully on $ROUTER"
     else
-        echo "Failed to create backup on $ROUTER"
+        log "Failed to create backup on $ROUTER"
         exit 1
     fi
 }
@@ -35,15 +44,16 @@ pull_backup() {
     local backup_file="$ROUTER.backup"
     local sftp_command="get $backup_file $BACKUP_DIR/"
     
+    log "Pulling backup from router..."
     sftp $SSH_OPTIONS -P $SSH_PORT "$USER@$ROUTER" <<EOF
 $sftp_command
 exit
 EOF
 
     if [ $? -eq 0 ]; then
-        echo "Backup file pulled successfully from $ROUTER"
+        log "Backup file pulled successfully from $ROUTER"
     else
-        echo "Failed to pull backup file from $ROUTER"
+        log "Failed to pull backup file from $ROUTER"
         exit 1
     fi
 }
@@ -52,11 +62,12 @@ EOF
 rename_backup() {
     local old_name="$BACKUP_DIR/$ROUTER.backup"
     local new_name="$BACKUP_DIR/$ROUTER-$(TZ=$TZ date +%Y%m%d_%H%M%S).backup"
+    log "Renaming backup file..."
     mv "$old_name" "$new_name"
     if [ $? -eq 0 ]; then
-        echo "Backup file renamed to $(basename "$new_name")"
+        log "Backup file renamed to $(basename "$new_name")"
     else
-        echo "Failed to rename backup file"
+        log "Failed to rename backup file"
         exit 1
     fi
 }
@@ -65,19 +76,19 @@ rename_backup() {
 manage_backups() {
     local backup_count=$(ls -1 "$BACKUP_DIR/$ROUTER"-*.backup 2>/dev/null | wc -l)
     
+    log "Managing backup files..."
     if [ "$backup_count" -gt "$MAX_BACKUPS" ]; then
-        echo "Removing old backups..."
+        log "Removing old backups..."
         ls -1t "$BACKUP_DIR/$ROUTER"-*.backup | tail -n +$((MAX_BACKUPS+1)) | xargs rm -f
-        echo "Old backups removed. Keeping the $MAX_BACKUPS most recent backups."
+        log "Old backups removed. Keeping the $MAX_BACKUPS most recent backups."
     else
-        echo "Number of backups ($backup_count) does not exceed limit ($MAX_BACKUPS). No backups deleted."
+        log "Number of backups ($backup_count) does not exceed limit ($MAX_BACKUPS). No backups deleted."
     fi
 }
 
 # Main execution
-echo "Starting backup process for $ROUTER"
 create_backup
 pull_backup
 rename_backup
 manage_backups
-echo "Backup process completed successfully"
+log "Backup process completed successfully"
