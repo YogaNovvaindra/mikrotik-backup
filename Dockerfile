@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
     openssh-client \
     cron \
     tzdata \
+    logrotate \
     && rm -rf /var/lib/apt/lists/*
 
 # Set up a non-root user
@@ -19,6 +20,9 @@ WORKDIR /home/backupuser
 RUN mkdir -p /home/backupuser/.ssh && \
     chmod 700 /home/backupuser/.ssh && \
     chown backupuser:backupuser /home/backupuser/.ssh 
+
+# Add logrotate configuration
+COPY logrotate.conf /etc/logrotate.d/mikrotik-backup
 
 # Copy the backup script
 COPY mikrotik_backup.sh .
