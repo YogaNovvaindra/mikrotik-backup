@@ -11,6 +11,10 @@ SSH_PORT="${MIKROTIK_SSH_PORT:-22}"
 MAX_BACKUPS="${MIKROTIK_MAX_BACKUPS:-3}"
 BACKUP_DIR="/home/backupuser/backups"
 
+# Ensure TZ is set, default to UTC if not specified
+TZ="${TZ:-UTC}"
+export TZ
+
 # SSH and SFTP options to bypass host key checking and accept ssh-rsa key type
 SSH_OPTIONS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PubkeyAcceptedKeyTypes=+ssh-rsa -i /home/backupuser/.ssh/id_rsa"
 
