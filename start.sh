@@ -15,14 +15,16 @@ if [ -n "$MIKROTIK_ROUTER" ]; then
   echo "Added $MIKROTIK_ROUTER to known_hosts"
 fi
 
-# Add global SSH configuration for KEX algorithms
+# Add global SSH configuration for extended KEX algorithms
 cat << EOF > /home/backupuser/.ssh/config
 Host *
-    KexAlgorithms +diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha1,diffie-hellman-group1-sha1
+    KexAlgorithms +diffie-hellman-group1-sha1,diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha1,diffie-hellman-group-exchange-sha256
+    Ciphers +3des-cbc,aes128-cbc,aes192-cbc,aes256-cbc
+    HostKeyAlgorithms +ssh-rsa,ssh-dss
 EOF
 chown backupuser:backupuser /home/backupuser/.ssh/config
 chmod 600 /home/backupuser/.ssh/config
-echo "Added global SSH configuration for KEX algorithms"
+echo "Added global SSH configuration with extended algorithms"
 
 if [ -n "$TZDATA" ]; then
   ln -snf /usr/share/zoneinfo/$TZDATA /etc/localtime && echo $TZDATA > /etc/timezone
