@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Source the environment variables
-. /etc/environment
-
 # This script creates a backup file on the MikroTik router, pulls it to the local machine,
 # and manages the number of backup copies in a specific folder. It uses environment variables for configuration.
 
