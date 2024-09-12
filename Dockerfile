@@ -43,31 +43,30 @@ RUN touch /var/log/cron.log /var/log/mikrotik_backup.log && \
     chown backupuser:backupuser /var/log/cron.log /var/log/mikrotik_backup.log
 
 # Create a startup script
-RUN echo '#!/bin/bash\n\
-echo "Starting container..."\n\
-if [ -f /home/backupuser/.ssh/id_rsa ]; then\n\
-  chmod 600 /home/backupuser/.ssh/id_rsa\n\
-  chown backupuser:backupuser /home/backupuser/.ssh/id_rsa\n\
-  echo "SSH key permissions set"\n\
-fi\n\
-if [ -n "$MIKROTIK_ROUTER" ]; then\n\
-  ssh-keyscan -H $MIKROTIK_ROUTER >> /home/backupuser/.ssh/known_hosts\n\
-  chown backupuser:backupuser /home/backupuser/.ssh/known_hosts\n\
-  chmod 644 /home/backupuser/.ssh/known_hosts\n\
-  echo "Added $MIKROTIK_ROUTER to known_hosts"\n\
-fi\n\
-# Set the timezone\n\
-if [ -n "$TZDATA" ]; then\n\
-  ln -snf /usr/share/zoneinfo/$TZDATA /etc/localtime && echo $TZDATA > /etc/timezone\n\
-  echo "Timezone set to $TZDATA"\n\
-fi\n\
-echo "$CRON_SCHEDULE root . /etc/environment && /home/backupuser/mikrotik_backup.sh >> /var/log/mikrotik_backup.log 2>&1" > /etc/crontabs/root\n\
-chmod 0644 /etc/crontabs/root\n\
-env > /etc/environment\n\
-echo "Cron job set up with schedule: $CRON_SCHEDULE"\n\
-echo "Starting cron service..."\n\
-crond -f -d 8' > /start.sh \
-&& chmod +x /start.sh
+RUN echo '#!/bin/sh' > /start.sh && \
+    echo 'echo "Starting container..."' >> /start.sh && \
+    echo 'if [ -f /home/backupuser/.ssh/id_rsa ]; then' >> /start.sh && \
+    echo '  chmod 600 /home/backupuser/.ssh/id_rsa' >> /start.sh && \
+    echo '  chown backupuser:backupuser /home/backupuser/.ssh/id_rsa' >> /start.sh && \
+    echo '  echo "SSH key permissions set"' >> /start.sh && \
+    echo 'fi' >> /start.sh && \
+    echo 'if [ -n "$MIKROTIK_ROUTER" ]; then' >> /start.sh && \
+    echo '  ssh-keyscan -H $MIKROTIK_ROUTER >> /home/backupuser/.ssh/known_hosts' >> /start.sh && \
+    echo '  chown backupuser:backupuser /home/backupuser/.ssh/known_hosts' >> /start.sh && \
+    echo '  chmod 644 /home/backupuser/.ssh/known_hosts' >> /start.sh && \
+    echo '  echo "Added $MIKROTIK_ROUTER to known_hosts"' >> /start.sh && \
+    echo 'fi' >> /start.sh && \
+    echo 'if [ -n "$TZDATA" ]; then' >> /start.sh && \
+    echo '  ln -snf /usr/share/zoneinfo/$TZDATA /etc/localtime && echo $TZDATA > /etc/timezone' >> /start.sh && \
+    echo '  echo "Timezone set to $TZDATA"' >> /start.sh && \
+    echo 'fi' >> /start.sh && \
+    echo 'echo "$CRON_SCHEDULE root . /etc/environment && /home/backupuser/mikrotik_backup.sh >> /var/log/mikrotik_backup.log 2>&1" > /etc/crontabs/root' >> /start.sh && \
+    echo 'chmod 0644 /etc/crontabs/root' >> /start.sh && \
+    echo 'env > /etc/environment' >> /start.sh && \
+    echo 'echo "Cron job set up with schedule: $CRON_SCHEDULE"' >> /start.sh && \
+    echo 'echo "Starting cron service..."' >> /start.sh && \
+    echo 'crond -f -d 8' >> /start.sh && \
+    chmod +x /start.sh
 
 # Run the startup script
 CMD ["/start.sh"]
