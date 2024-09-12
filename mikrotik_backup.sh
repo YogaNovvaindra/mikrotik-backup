@@ -17,7 +17,7 @@ SSH_OPTIONS="-o StrictHostKeyChecking=no -o PubkeyAcceptedKeyTypes=+ssh-rsa -o K
 
 # Logging function
 log() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a /var/log/mikrotik_backup.log
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1"
 }
 
 # Ensure backup directory exists

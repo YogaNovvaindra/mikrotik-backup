@@ -37,42 +37,14 @@ ENV MIKROTIK_ROUTER=10.1.1.127 \
     TZDATA=Asia/Jakarta \
     CRON_SCHEDULE="0 0 * * *"
 
-# Create log files and set permissions
-RUN touch /var/log/cron.log /var/log/mikrotik_backup.log && \
-    chmod 0644 /var/log/cron.log /var/log/mikrotik_backup.log && \
-    chown backupuser:backupuser /var/log/cron.log /var/log/mikrotik_backup.log
-
-# Create a named pipe for log redirection
-RUN mkfifo /var/log/mikrotik_backup_pipe
+# Create log file and set permissions
+RUN touch /var/log/mikrotik_backup.log && \
+    chmod 0644 /var/log/mikrotik_backup.log && \
+    chown backupuser:backupuser /var/log/mikrotik_backup.log
 
 # Create a startup script
-RUN echo '#!/bin/sh' > /start.sh && \
-    echo 'echo "Starting container..."' >> /start.sh && \
-    echo 'if [ -f /home/backupuser/.ssh/id_rsa ]; then' >> /start.sh && \
-    echo '  chmod 600 /home/backupuser/.ssh/id_rsa' >> /start.sh && \
-    echo '  chown backupuser:backupuser /home/backupuser/.ssh/id_rsa' >> /start.sh && \
-    echo '  echo "SSH key permissions set"' >> /start.sh && \
-    echo 'fi' >> /start.sh && \
-    echo 'if [ -n "$MIKROTIK_ROUTER" ]; then' >> /start.sh && \
-    echo '  ssh-keyscan -H $MIKROTIK_ROUTER >> /home/backupuser/.ssh/known_hosts' >> /start.sh && \
-    echo '  chown backupuser:backupuser /home/backupuser/.ssh/known_hosts' >> /start.sh && \
-    echo '  chmod 644 /home/backupuser/.ssh/known_hosts' >> /start.sh && \
-    echo '  echo "Added $MIKROTIK_ROUTER to known_hosts"' >> /start.sh && \
-    echo 'fi' >> /start.sh && \
-    echo 'if [ -n "$TZDATA" ]; then' >> /start.sh && \
-    echo '  ln -snf /usr/share/zoneinfo/$TZDATA /etc/localtime && echo $TZDATA > /etc/timezone' >> /start.sh && \
-    echo '  echo "Timezone set to $TZDATA"' >> /start.sh && \
-    echo 'fi' >> /start.sh && \
-    echo 'printenv | sed "s/^\(.*\)$/export \1/g" > /home/backupuser/container_env' >> /start.sh && \
-    echo 'chmod +x /home/backupuser/container_env' >> /start.sh && \
-    echo 'echo "$CRON_SCHEDULE /bin/bash -c '"'"'source /home/backupuser/container_env && /home/backupuser/mikrotik_backup.sh'"'"' > /var/log/mikrotik_backup_pipe 2>&1" > /etc/crontabs/root' >> /start.sh && \
-    echo 'chmod 0644 /etc/crontabs/root' >> /start.sh && \
-    echo 'echo "Cron job set up with schedule: $CRON_SCHEDULE"' >> /start.sh && \
-    echo 'cat /var/log/mikrotik_backup_pipe >> /var/log/mikrotik_backup.log &' >> /start.sh && \
-    echo 'tail -f /var/log/mikrotik_backup.log &' >> /start.sh && \
-    echo 'echo "Starting cron service..."' >> /start.sh && \
-    echo 'crond -f -d 8' >> /start.sh && \
-    chmod +x /start.sh
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
 
 # Run the startup script
 CMD ["/start.sh"]
