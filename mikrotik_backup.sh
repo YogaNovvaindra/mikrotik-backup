@@ -12,8 +12,9 @@ MAX_BACKUPS=$MIKROTIK_MAX_BACKUPS
 BACKUP_DIR="/home/backupuser/backups"
 TZ="${TZDATA:-Asia/Jakarta}"
 
-# SSH and SFTP options to bypass host key checking, accept ssh-rsa key type, and include additional KEX algorithms
-SSH_OPTIONS="-o StrictHostKeyChecking=no -o PubkeyAcceptedKeyTypes=+ssh-rsa -o KexAlgorithms=+diffie-hellman-group14-sha256,diffie-hellman-group-exchange-sha256 -i /home/backupuser/.ssh/id_rsa"
+# SSH and SFTP options to bypass host key checking, accept ssh-rsa key type
+SSH_OPTIONS="-o StrictHostKeyChecking=no -o PubkeyAcceptedKeyTypes=+ssh-rsa -i /home/backupuser/.ssh/id_rsa"
+
 # Logging function
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1"
