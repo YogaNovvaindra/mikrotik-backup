@@ -14,4 +14,5 @@ services:
     volumes:
       - ./backups:/home/backupuser/backups
       - ./id_rsa:/home/backupuser/.ssh/id_rsa:ro
+      - ./id_rsa.pub:/home/backupuser/.ssh/id_rsa.pub:ro
       - ./known_hosts:/home/backupuser/.ssh/known_hosts:rw

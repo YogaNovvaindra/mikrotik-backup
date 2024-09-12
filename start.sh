@@ -9,22 +9,11 @@ if [ -f /home/backupuser/.ssh/id_rsa ]; then
 fi
 
 if [ -n "$MIKROTIK_ROUTER" ]; then
-  ssh-keyscan -H -t rsa,dsa,ecdsa,ed25519 $MIKROTIK_ROUTER >> /home/backupuser/.ssh/known_hosts
+  ssh-keyscan -H $MIKROTIK_ROUTER >> /home/backupuser/.ssh/known_hosts
   chown backupuser:backupuser /home/backupuser/.ssh/known_hosts
   chmod 644 /home/backupuser/.ssh/known_hosts
   echo "Added $MIKROTIK_ROUTER to known_hosts"
 fi
-
-# Add global SSH configuration for extended KEX algorithms
-cat << EOF > /home/backupuser/.ssh/config
-Host *
-    KexAlgorithms +diffie-hellman-group1-sha1,diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha1,diffie-hellman-group-exchange-sha256
-    Ciphers +3des-cbc,aes128-cbc,aes192-cbc,aes256-cbc
-    HostKeyAlgorithms +ssh-rsa,ssh-dss
-EOF
-chown backupuser:backupuser /home/backupuser/.ssh/config
-chmod 600 /home/backupuser/.ssh/config
-echo "Added global SSH configuration with extended algorithms"
 
 if [ -n "$TZDATA" ]; then
   ln -snf /usr/share/zoneinfo/$TZDATA /etc/localtime && echo $TZDATA > /etc/timezone
