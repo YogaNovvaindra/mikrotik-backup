@@ -28,7 +28,7 @@ COPY logrotate.conf /etc/logrotate.d/mikrotik-backup
 COPY mikrotik_backup.sh /home/backupuser/
 RUN chmod +x /home/backupuser/mikrotik_backup.sh
 
-# Set environment variables (these can be overridden at runtime)
+# Set default environment variables
 ENV MIKROTIK_ROUTER=10.1.1.127 \
     MIKROTIK_USER=admin \
     MIKROTIK_BACKUP_ENCRYPT=PASSWORD \
@@ -61,8 +61,10 @@ if [ -n "$TZDATA" ]; then
   ln -snf /usr/share/zoneinfo/$TZDATA /etc/localtime && echo $TZDATA > /etc/timezone
   echo "Timezone set to $TZDATA"
 fi
-printenv | sed "s/^\(.*\)$/export \1/g" > /etc/environment
-echo "$CRON_SCHEDULE /bin/bash -c '. /etc/environment && /home/backupuser/mikrotik_backup.sh' >> /var/log/mikrotik_backup.log 2>&1" > /etc/crontabs/root
+# Export all environment variables
+export $(printenv | sed 's/=.*//' | grep -v '^$' | grep -v '^_' | tr '\n' ' ')
+# Create cron job
+echo "$CRON_SCHEDULE /bin/bash -c '/home/backupuser/mikrotik_backup.sh' >> /var/log/mikrotik_backup.log 2>&1" > /etc/crontabs/root
 chmod 0644 /etc/crontabs/root
 echo "Cron job set up with schedule: $CRON_SCHEDULE"
 echo "Starting cron service..."
