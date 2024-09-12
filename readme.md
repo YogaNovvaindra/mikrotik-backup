@@ -64,13 +64,13 @@ This project provides a Docker container that automates the process of creating 
 
 - `./backups:/home/backupuser/backups`: Directory to store backup files
 - `./id_rsa:/home/backupuser/.ssh/id_rsa:ro`: SSH private key for authentication
+- `./id_rsa.pub:/home/backupuser/.ssh/id_rsa.pub:ro`: SSH public key for authentication
 - `./known_hosts:/home/backupuser/.ssh/known_hosts:rw`: Known hosts file
 
 ## 📊 Logging
 
 Logs are available in the container at:
 - 📄 `/var/log/mikrotik_backup.log`: Backup operation logs
-- 📄 `/var/log/cron.log`: Cron job logs
 
 You can view these logs using Docker commands:
 ```
