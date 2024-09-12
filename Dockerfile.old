@@ -1,19 +1,22 @@
-# Use Alpine 3.20 as the base image
-FROM alpine:3.20
+# Use Ubuntu 24.04 as the base image
+FROM ubuntu:24.04
 
 # Set the maintainer
 LABEL maintainer="yoga.november2000@gmail.com"
 
-# Install necessary packages
-RUN apk add --no-cache \
+# Avoid prompts from apt
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update and install necessary packages
+RUN apt-get update && apt-get install -y \
     openssh-client \
+    cron \
     tzdata \
     logrotate \
-    bash \
-    coreutils
+    && rm -rf /var/lib/apt/lists/*
 
 # Set up a non-root user
-RUN adduser -D backupuser
+RUN useradd -m backupuser
 WORKDIR /home/backupuser
 
 # Create .ssh directory with correct permissions
@@ -61,12 +64,14 @@ if [ -n "$TZDATA" ]; then\n\
   ln -snf /usr/share/zoneinfo/$TZDATA /etc/localtime && echo $TZDATA > /etc/timezone\n\
   echo "Timezone set to $TZDATA"\n\
 fi\n\
-echo "$CRON_SCHEDULE root . /etc/environment && /home/backupuser/mikrotik_backup.sh >> /var/log/mikrotik_backup.log 2>&1" > /etc/crontabs/root\n\
-chmod 0644 /etc/crontabs/root\n\
+echo "$CRON_SCHEDULE root . /etc/environment && /home/backupuser/mikrotik_backup.sh >> /var/log/mikrotik_backup.log 2>&1" > /etc/cron.d/backup-cron\n\
+chmod 0644 /etc/cron.d/backup-cron\n\
 env > /etc/environment\n\
 echo "Cron job set up with schedule: $CRON_SCHEDULE"\n\
 echo "Starting cron service..."\n\
-crond -f -d 8' > /start.sh \
+cron\n\
+echo "Cron service started. Tailing logs..."\n\
+tail -f /var/log/cron.log /var/log/mikrotik_backup.log' > /start.sh \
 && chmod +x /start.sh
 
 # Run the startup script
