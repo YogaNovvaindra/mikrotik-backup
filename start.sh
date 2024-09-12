@@ -28,4 +28,9 @@ chmod 0644 /etc/crontabs/root
 
 echo "Cron job set up with schedule: $CRON_SCHEDULE"
 echo "Starting cron service..."
+
+# Start tailing the log file in the background
+tail -f /var/log/mikrotik_backup.log &
+
+# Start crond in the foreground
 crond -f -d 8

@@ -1,6 +1,6 @@
 services:
   mikrotik-backup:
-    image: ghcr.io/yoganovvaindra/mikrotik-backup:v1
+    image: ghcr.io/yoganovvaindra/mikrotik-backup:v1.2
     container_name: mikrotik-backup
     network_mode: bridge
     restart: always
