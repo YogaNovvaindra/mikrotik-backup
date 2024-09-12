@@ -1,36 +1,20 @@
-#!/bin/bash
-
-# This script creates a backup file on the MikroTik router, pulls it to the local machine,
-# and manages the number of backup copies in a specific folder. It uses environment variables for configuration.
-
-# Read configuration from environment variables, with defaults
-ROUTER=$MIKROTIK_ROUTER
-USER=$MIKROTIK_USER
-BACKUP_PASSWORD=$MIKROTIK_BACKUP_ENCRYPT
-SSH_PORT=$MIKROTIK_SSH_PORT
-MAX_BACKUPS=$MIKROTIK_MAX_BACKUPS
-BACKUP_DIR="/home/backupuser/backups"
-TZ="${TZDATA:-Asia/Jakarta}"
-
-# SSH and SFTP options to bypass host key checking and accept ssh-rsa key type
-SSH_OPTIONS="-o StrictHostKeyChecking=no -o PubkeyAcceptedKeyTypes=+ssh-rsa -i /home/backupuser/.ssh/id_rsa"
-
-# Logging function
+# Enhanced Logging Function
 log() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a /var/log/mikrotik_backup.log
 }
 
-# Ensure backup directory exists
-mkdir -p "$BACKUP_DIR"
-
+# Main execution
 log "Starting backup process for $ROUTER"
-# log "Debug: ROUTER=$ROUTER, USER=$USER, SSH_PORT=$SSH_PORT, MAX_BACKUPS=$MAX_BACKUPS, TZ=$TZ"
+log "Connecting to router at $ROUTER with user $USER"
 
 # Function to create backup on the router
 create_backup() {
     local router_command="/system backup save name=$ROUTER encryption=aes-sha256 password=$BACKUP_PASSWORD"
     log "Creating backup on router..."
-    ssh $SSH_OPTIONS -p $SSH_PORT "$USER@$ROUTER" "$router_command"
+    
+    output=$(ssh $SSH_OPTIONS -p $SSH_PORT "$USER@$ROUTER" "$router_command" 2>&1)
+    log "$output"
+    
     if [ $? -eq 0 ]; then
         log "Backup created successfully on $ROUTER"
     else
@@ -45,11 +29,14 @@ pull_backup() {
     local sftp_command="get $backup_file $BACKUP_DIR/"
     
     log "Pulling backup from router..."
-    sftp $SSH_OPTIONS -P $SSH_PORT "$USER@$ROUTER" <<EOF
+    
+    output=$(sftp $SSH_OPTIONS -P $SSH_PORT "$USER@$ROUTER" <<EOF
 $sftp_command
 exit
 EOF
-
+2>&1)
+    log "$output"
+    
     if [ $? -eq 0 ]; then
         log "Backup file pulled successfully from $ROUTER"
     else
@@ -62,8 +49,10 @@ EOF
 rename_backup() {
     local old_name="$BACKUP_DIR/$ROUTER.backup"
     local new_name="$BACKUP_DIR/$ROUTER-$(TZ=$TZ date +%Y%m%d_%H%M%S).backup"
-    log "Renaming backup file..."
+    log "Renaming backup file from $old_name to $new_name..."
+    
     mv "$old_name" "$new_name"
+    
     if [ $? -eq 0 ]; then
         log "Backup file renamed to $(basename "$new_name")"
     else
@@ -77,6 +66,7 @@ manage_backups() {
     local backup_count=$(ls -1 "$BACKUP_DIR/$ROUTER"-*.backup 2>/dev/null | wc -l)
     
     log "Managing backup files..."
+    
     if [ "$backup_count" -gt "$MAX_BACKUPS" ]; then
         log "Removing old backups..."
         ls -1t "$BACKUP_DIR/$ROUTER"-*.backup | tail -n +$((MAX_BACKUPS+1)) | xargs rm -f
