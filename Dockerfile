@@ -37,7 +37,7 @@ ENV MIKROTIK_USER=admin
 ENV MIKROTIK_BACKUP_ENCRYPT=PASSWORD
 ENV MIKROTIK_SSH_PORT=22
 ENV MIKROTIK_MAX_BACKUPS=3
-ENV TZ=Asia/Jakarta
+ENV TZDATA=Asia/Jakarta
 ENV CRON_SCHEDULE="0 0 * * *"
 
 # Create log files and set permissions
@@ -60,9 +60,9 @@ if [ -n "$MIKROTIK_ROUTER" ]; then\n\
   echo "Added $MIKROTIK_ROUTER to known_hosts"\n\
 fi\n\
 # Set the timezone\n\
-if [ -n "$TZ" ]; then\n\
-  ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone\n\
-  echo "Timezone set to $TZ"\n\
+if [ -n "$TZDATA" ]; then\n\
+  ln -snf /usr/share/zoneinfo/$TZDATA /etc/localtime && echo $TZDATA > /etc/timezone\n\
+  echo "Timezone set to $TZDATA"\n\
 fi\n\
 echo "$CRON_SCHEDULE root . /etc/environment && /home/backupuser/mikrotik_backup.sh >> /var/log/mikrotik_backup.log 2>&1" > /etc/cron.d/backup-cron\n\
 chmod 0644 /etc/cron.d/backup-cron\n\
