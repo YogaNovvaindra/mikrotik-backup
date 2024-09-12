@@ -10,8 +10,7 @@ RUN apk add --no-cache \
     tzdata \
     logrotate \
     bash \
-    coreutils \
-    sftp-server
+    coreutils 
 
 # Set up a non-root user
 RUN adduser -D backupuser
