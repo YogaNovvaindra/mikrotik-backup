@@ -33,4 +33,4 @@ echo "Starting cron service..."
 tail -f /var/log/mikrotik_backup.log &
 
 # Start crond in the foreground
-crond -f -d 1
+crond -f -d 0
