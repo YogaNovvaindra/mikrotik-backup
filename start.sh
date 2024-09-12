@@ -9,7 +9,9 @@ if [ -f /home/backupuser/.ssh/id_rsa ]; then
 fi
 
 if [ -n "$MIKROTIK_ROUTER" ]; then
-  ssh-keyscan -H $MIKROTIK_ROUTER >> /home/backupuser/.ssh/known_hosts
+  ssh-keyscan -H -t rsa,dsa,ecdsa,ed25519 \
+    -o KexAlgorithms=+diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha1,diffie-hellman-group1-sha1 \
+    $MIKROTIK_ROUTER >> /home/backupuser/.ssh/known_hosts
   chown backupuser:backupuser /home/backupuser/.ssh/known_hosts
   chmod 644 /home/backupuser/.ssh/known_hosts
   echo "Added $MIKROTIK_ROUTER to known_hosts"
