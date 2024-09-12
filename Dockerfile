@@ -42,6 +42,9 @@ RUN touch /var/log/cron.log /var/log/mikrotik_backup.log && \
     chmod 0644 /var/log/cron.log /var/log/mikrotik_backup.log && \
     chown backupuser:backupuser /var/log/cron.log /var/log/mikrotik_backup.log
 
+# Create a named pipe for log redirection
+RUN mkfifo /var/log/mikrotik_backup_pipe
+
 # Create a startup script
 RUN echo '#!/bin/sh' > /start.sh && \
     echo 'echo "Starting container..."' >> /start.sh && \
@@ -62,9 +65,11 @@ RUN echo '#!/bin/sh' > /start.sh && \
     echo 'fi' >> /start.sh && \
     echo 'printenv | sed "s/^\(.*\)$/export \1/g" > /home/backupuser/container_env' >> /start.sh && \
     echo 'chmod +x /home/backupuser/container_env' >> /start.sh && \
-    echo 'echo "$CRON_SCHEDULE /bin/bash -c '"'"'source /home/backupuser/container_env && /home/backupuser/mikrotik_backup.sh'"'"' >> /var/log/mikrotik_backup.log 2>&1" > /etc/crontabs/root' >> /start.sh && \
+    echo 'echo "$CRON_SCHEDULE /bin/bash -c '"'"'source /home/backupuser/container_env && /home/backupuser/mikrotik_backup.sh'"'"' > /var/log/mikrotik_backup_pipe 2>&1" > /etc/crontabs/root' >> /start.sh && \
     echo 'chmod 0644 /etc/crontabs/root' >> /start.sh && \
     echo 'echo "Cron job set up with schedule: $CRON_SCHEDULE"' >> /start.sh && \
+    echo 'cat /var/log/mikrotik_backup_pipe >> /var/log/mikrotik_backup.log &' >> /start.sh && \
+    echo 'tail -f /var/log/mikrotik_backup.log &' >> /start.sh && \
     echo 'echo "Starting cron service..."' >> /start.sh && \
     echo 'crond -f -d 8' >> /start.sh && \
     chmod +x /start.sh
