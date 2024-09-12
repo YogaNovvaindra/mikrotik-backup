@@ -10,32 +10,33 @@ RUN apk add --no-cache \
     tzdata \
     logrotate \
     bash \
-    coreutils
+    coreutils \
+    sftp-server
 
 # Set up a non-root user
 RUN adduser -D backupuser
 WORKDIR /home/backupuser
 
-# Create .ssh directory with correct permissions
-RUN mkdir -p /home/backupuser/.ssh && \
+# Create .ssh directory and backups directory with correct permissions
+RUN mkdir -p /home/backupuser/.ssh /home/backupuser/backups && \
     chmod 700 /home/backupuser/.ssh && \
-    chown backupuser:backupuser /home/backupuser/.ssh 
+    chown -R backupuser:backupuser /home/backupuser
 
 # Add logrotate configuration
 COPY logrotate.conf /etc/logrotate.d/mikrotik-backup
 
 # Copy the backup script
-COPY mikrotik_backup.sh .
-RUN chmod +x mikrotik_backup.sh
+COPY mikrotik_backup.sh /home/backupuser/
+RUN chmod +x /home/backupuser/mikrotik_backup.sh
 
 # Set environment variables (these can be overridden at runtime)
-ENV MIKROTIK_ROUTER=10.1.1.127
-ENV MIKROTIK_USER=admin
-ENV MIKROTIK_BACKUP_ENCRYPT=PASSWORD
-ENV MIKROTIK_SSH_PORT=22
-ENV MIKROTIK_MAX_BACKUPS=3
-ENV TZDATA=Asia/Jakarta
-ENV CRON_SCHEDULE="0 0 * * *"
+ENV MIKROTIK_ROUTER=10.1.1.127 \
+    MIKROTIK_USER=admin \
+    MIKROTIK_BACKUP_ENCRYPT=PASSWORD \
+    MIKROTIK_SSH_PORT=22 \
+    MIKROTIK_MAX_BACKUPS=3 \
+    TZDATA=Asia/Jakarta \
+    CRON_SCHEDULE="0 0 * * *"
 
 # Create log files and set permissions
 RUN touch /var/log/cron.log /var/log/mikrotik_backup.log && \
@@ -60,9 +61,9 @@ RUN echo '#!/bin/sh' > /start.sh && \
     echo '  ln -snf /usr/share/zoneinfo/$TZDATA /etc/localtime && echo $TZDATA > /etc/timezone' >> /start.sh && \
     echo '  echo "Timezone set to $TZDATA"' >> /start.sh && \
     echo 'fi' >> /start.sh && \
-    echo 'echo "$CRON_SCHEDULE . /etc/environment && /home/backupuser/mikrotik_backup.sh >> /var/log/mikrotik_backup.log 2>&1" > /etc/crontabs/root' >> /start.sh && \
+    echo 'printenv | sed "s/^\(.*\)$/export \1/g" > /etc/environment' >> /start.sh && \
+    echo 'echo "$CRON_SCHEDULE /bin/bash -c \'. /etc/environment && /home/backupuser/mikrotik_backup.sh\' >> /var/log/mikrotik_backup.log 2>&1" > /etc/crontabs/root' >> /start.sh && \
     echo 'chmod 0644 /etc/crontabs/root' >> /start.sh && \
-    echo 'env > /etc/environment' >> /start.sh && \
     echo 'echo "Cron job set up with schedule: $CRON_SCHEDULE"' >> /start.sh && \
     echo 'echo "Starting cron service..."' >> /start.sh && \
     echo 'crond -f -d 8' >> /start.sh && \
