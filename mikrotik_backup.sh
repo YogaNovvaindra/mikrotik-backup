@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Redirect output to both the pipe and stdout/stderr
-exec > >(tee /var/log/mikrotik_backup_pipe) 2>&1
-
 # This script creates a backup file on the MikroTik router, pulls it to the local machine,
 # and manages the number of backup copies in a specific folder. It uses environment variables for configuration.
 
@@ -15,12 +12,12 @@ MAX_BACKUPS=$MIKROTIK_MAX_BACKUPS
 BACKUP_DIR="/home/backupuser/backups"
 TZ="${TZDATA:-Asia/Jakarta}"
 
-# SSH and SFTP options to bypass host key checking and accept ssh-rsa key type
-SSH_OPTIONS="-o StrictHostKeyChecking=no -o PubkeyAcceptedKeyTypes=+ssh-rsa -i /home/backupuser/.ssh/id_rsa"
+# SSH and SFTP options to bypass host key checking, accept ssh-rsa key type, and include additional KEX algorithms
+SSH_OPTIONS="-o StrictHostKeyChecking=no -o PubkeyAcceptedKeyTypes=+ssh-rsa -o KexAlgorithms=+diffie-hellman-group1-sha1,diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha1,diffie-hellman-group-exchange-sha256 -i /home/backupuser/.ssh/id_rsa"
 
 # Logging function
 log() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a /var/log/mikrotik_backup.log
 }
 
 # Ensure backup directory exists
@@ -32,12 +29,11 @@ log "Starting backup process for $ROUTER"
 create_backup() {
     local router_command="/system backup save name=$ROUTER encryption=aes-sha256 password=$BACKUP_PASSWORD"
     log "Creating backup on router..."
-    ssh $SSH_OPTIONS -p $SSH_PORT "$USER@$ROUTER" "$router_command"
-    if [ $? -eq 0 ]; then
+    if ssh $SSH_OPTIONS -p $SSH_PORT "$USER@$ROUTER" "$router_command"; then
         log "Backup created successfully on $ROUTER"
     else
         log "Failed to create backup on $ROUTER"
-        exit 1
+        return 1
     fi
 }
 
@@ -47,16 +43,15 @@ pull_backup() {
     local sftp_command="get $backup_file $BACKUP_DIR/"
     
     log "Pulling backup from router..."
-    sftp $SSH_OPTIONS -P $SSH_PORT "$USER@$ROUTER" <<EOF
+    if sftp $SSH_OPTIONS -P $SSH_PORT "$USER@$ROUTER" <<EOF
 $sftp_command
 exit
 EOF
-
-    if [ $? -eq 0 ]; then
+    then
         log "Backup file pulled successfully from $ROUTER"
     else
         log "Failed to pull backup file from $ROUTER"
-        exit 1
+        return 1
     fi
 }
 
@@ -65,12 +60,11 @@ rename_backup() {
     local old_name="$BACKUP_DIR/$ROUTER.backup"
     local new_name="$BACKUP_DIR/$ROUTER-$(TZ=$TZ date +%Y%m%d_%H%M%S).backup"
     log "Renaming backup file..."
-    mv "$old_name" "$new_name"
-    if [ $? -eq 0 ]; then
+    if mv "$old_name" "$new_name"; then
         log "Backup file renamed to $(basename "$new_name")"
     else
         log "Failed to rename backup file"
-        exit 1
+        return 1
     fi
 }
 
@@ -89,8 +83,10 @@ manage_backups() {
 }
 
 # Main execution
-create_backup
-pull_backup
-rename_backup
-manage_backups
-log "Backup process completed successfully"
+if create_backup && pull_backup && rename_backup; then
+    manage_backups
+    log "Backup process completed successfully"
+else
+    log "Backup process failed"
+    exit 1
+fi
