@@ -60,7 +60,7 @@ RUN echo '#!/bin/sh' > /start.sh && \
     echo '  ln -snf /usr/share/zoneinfo/$TZDATA /etc/localtime && echo $TZDATA > /etc/timezone' >> /start.sh && \
     echo '  echo "Timezone set to $TZDATA"' >> /start.sh && \
     echo 'fi' >> /start.sh && \
-    echo 'echo "$CRON_SCHEDULE root . /etc/environment && /home/backupuser/mikrotik_backup.sh >> /var/log/mikrotik_backup.log 2>&1" > /etc/crontabs/root' >> /start.sh && \
+    echo 'echo "$CRON_SCHEDULE . /etc/environment && /home/backupuser/mikrotik_backup.sh >> /var/log/mikrotik_backup.log 2>&1" > /etc/crontabs/root' >> /start.sh && \
     echo 'chmod 0644 /etc/crontabs/root' >> /start.sh && \
     echo 'env > /etc/environment' >> /start.sh && \
     echo 'echo "Cron job set up with schedule: $CRON_SCHEDULE"' >> /start.sh && \
